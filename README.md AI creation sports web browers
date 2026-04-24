@@ -1,0 +1,508 @@
+# web-brower
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SportBrowser</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+#wrap{background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;width:100%;max-width:900px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+#chrome{background:#1b2838;display:flex;flex-direction:column}
+#winbar{display:flex;align-items:center;padding:8px 12px;gap:10px}
+.dot{width:12px;height:12px;border-radius:50%;cursor:pointer}
+#titletext{color:rgba(255,255,255,0.5);font-size:12px;flex:1;text-align:center}
+#tabrow{display:flex;align-items:flex-end;padding:0 8px;gap:2px;overflow-x:auto}
+.tab{display:flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.04);border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap;border:0.5px solid rgba(255,255,255,0.06);border-bottom:none;transition:all 0.15s;max-width:160px}
+.tab.active{background:#fff;color:#111;border-color:#ccc}
+.tab-x{opacity:0.4;font-size:10px;margin-left:2px}
+.tab-x:hover{opacity:1;color:red}
+#newtab-btn{background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1}
+#newtab-btn:hover{color:#fff;background:rgba(255,255,255,0.08)}
+#navrow{display:flex;align-items:center;gap:6px;padding:8px 12px}
+.nb{background:rgba(255,255,255,0.07);border:none;color:rgba(255,255,255,0.7);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.nb:hover{background:rgba(255,255,255,0.18);color:#fff}
+.nb:active{transform:scale(0.92)}
+#urlwrap{flex:1;display:flex;align-items:center;background:rgba(255,255,255,0.09);border:0.5px solid rgba(255,255,255,0.14);border-radius:20px;padding:0 14px;gap:6px;height:32px}
+#urlwrap:focus-within{border-color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.14)}
+#lock{font-size:11px;opacity:0.45}
+#urlbar{background:none;border:none;color:#fff;font-size:12px;flex:1;outline:none;font-family:monospace}
+#urlbar::placeholder{color:rgba(255,255,255,0.3)}
+#go-btn{background:rgba(255,255,255,0.13);border:none;color:#fff;border-radius:14px;padding:3px 12px;font-size:12px;cursor:pointer}
+#go-btn:hover{background:rgba(255,255,255,0.25)}
+#bookmarks-bar{background:#1e2d3d;padding:5px 12px;display:flex;gap:4px;overflow-x:auto;border-top:0.5px solid rgba(255,255,255,0.06);scrollbar-width:none}
+#bookmarks-bar::-webkit-scrollbar{display:none}
+.bm{background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;cursor:pointer;padding:3px 10px;border-radius:4px;white-space:nowrap}
+.bm:hover{background:rgba(255,255,255,0.1);color:#fff}
+#content{flex:1;min-height:420px;display:flex;flex-direction:column;background:#fff}
+#statusbar{background:#1b2838;padding:4px 14px;font-size:10px;color:rgba(255,255,255,0.4);display:flex;justify-content:space-between;align-items:center}
+
+/* pages */
+.page{display:none;flex:1;flex-direction:column;overflow-y:auto}
+.page.show{display:flex}
+
+/* HOME */
+#home-pg{background:#0d1b2a;align-items:center;justify-content:center;gap:20px;padding:36px 24px}
+#home-logo{font-size:40px;font-weight:700;color:#fff;letter-spacing:-1px}
+#home-logo span{color:#e94560}
+#home-tagline{color:rgba(255,255,255,0.45);font-size:13px}
+#home-sbar{display:flex;gap:8px;width:100%;max-width:440px}
+#home-sbar input{flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:10px 18px;color:#fff;font-size:13px;outline:none}
+#home-sbar input::placeholder{color:rgba(255,255,255,0.3)}
+#home-sbar input:focus{border-color:rgba(255,255,255,0.35)}
+#home-sbar button{background:#e94560;border:none;color:#fff;border-radius:24px;padding:10px 20px;font-size:13px;cursor:pointer;font-weight:600}
+#home-sbar button:hover{background:#c73750}
+.qgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:440px}
+.qcard{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.15s}
+.qcard:hover{background:rgba(255,255,255,0.13);transform:translateY(-3px)}
+.qi{font-size:26px;display:block;margin-bottom:5px}
+.ql{font-size:11px;color:rgba(255,255,255,0.6)}
+.news-strip{width:100%;max-width:440px}
+.ns-item{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;font-size:12px;color:rgba(255,255,255,0.55);transition:color 0.1s}
+.ns-item:hover{color:#fff}
+
+/* LIVE SCORES */
+#scores-pg{background:#f4f5f7}
+.sp-top{background:#0f3460;color:#fff;padding:13px 16px;display:flex;align-items:center;justify-content:space-between}
+.sport-tabs{display:flex;gap:4px}
+.st{padding:4px 12px;font-size:12px;border-radius:12px;cursor:pointer;color:rgba(255,255,255,0.65);transition:all 0.15s}
+.st.on,.st:hover{background:rgba(255,255,255,0.18);color:#fff}
+.scores-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+.sc{background:#fff;border:1px solid #e2e4e9;border-radius:10px;padding:13px}
+.sc-lge{font-size:10px;color:#888;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px}
+.live-dot{display:inline-block;width:7px;height:7px;background:#e94560;border-radius:50%;margin-right:4px;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.live-tag{font-size:10px;color:#e94560;font-weight:600;display:flex;align-items:center;margin-bottom:6px}
+.match-row{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.team-n{font-size:13px;font-weight:600;color:#111;flex:1}
+.team-n.r{text-align:right}
+.score-mid{font-size:22px;font-weight:700;color:#111;display:flex;gap:5px;align-items:center}
+.sdash{color:#bbb;font-size:14px}
+.sp-news-wrap{padding:0 12px 16px}
+.sp-news-hd{font-size:12px;color:#888;font-weight:600;margin-bottom:8px;padding-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+.ni{padding:10px 0;border-bottom:1px solid #eee;cursor:pointer}
+.ni:last-child{border:none}
+.ni h4{font-size:13px;font-weight:600;color:#111;margin-bottom:3px}
+.ni p{font-size:11px;color:#888}
+.ni:hover h4{color:#0f3460}
+
+/* HIGHLIGHTS */
+#watch-pg{background:#f4f5f7}
+.watch-top{background:#0d1b2a;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.watch-top span{color:#fff;font-size:14px;font-weight:600}
+.cat-row{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;border-bottom:1px solid #e2e4e9;background:#fff;scrollbar-width:none}
+.cat-row::-webkit-scrollbar{display:none}
+.cat-btn{padding:5px 14px;border-radius:14px;border:1px solid #ddd;background:none;color:#666;font-size:12px;cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.cat-btn.on{background:#0f3460;color:#fff;border-color:#0f3460}
+.cat-btn:hover:not(.on){background:#f0f0f0}
+.vid-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+.vcard{background:#fff;border:1px solid #e2e4e9;border-radius:10px;overflow:hidden;cursor:pointer;transition:all 0.15s}
+.vcard:hover{border-color:#0f3460;transform:translateY(-2px)}
+.vthumb{height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
+.vplay{position:absolute;width:32px;height:32px;background:rgba(255,255,255,0.92);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#0f3460}
+.vinfo{padding:9px}
+.vtitle{font-size:12px;font-weight:600;color:#111;margin-bottom:3px}
+.vmeta{font-size:10px;color:#888}
+
+/* SETTINGS */
+#settings-pg{background:#fff;padding:20px}
+.s-section{margin-bottom:22px}
+.s-section h3{font-size:11px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #eee}
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.s-label{font-size:13px;color:#111;font-weight:500}
+.s-sub{font-size:11px;color:#888;margin-top:2px}
+.tog{width:36px;height:20px;background:#ccc;border-radius:10px;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0}
+.tog.on{background:#0f3460}
+.tog::after{content:'';width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left 0.2s}
+.tog.on::after{left:18px}
+select.ss{background:#f4f5f7;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:12px;color:#111;outline:none}
+.s-btn{font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid #ddd;background:#f4f5f7;color:#111;cursor:pointer}
+.s-btn:hover{background:#e0e0e0}
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <div id="chrome">
+
+    <!-- Title bar -->
+    <div id="winbar">
+      <div class="dot" style="background:#ff5f57" title="Close"></div>
+      <div class="dot" style="background:#febc2e" title="Minimize"></div>
+      <div class="dot" style="background:#28c840" title="Maximize"></div>
+      <span id="titletext">SportBrowser — New Tab</span>
+    </div>
+
+    <!-- Tab row -->
+    <div id="tabrow">
+      <div class="tab active" data-pg="home" onclick="clickTab(this)">
+        🏠 New Tab
+        <span class="tab-x" onclick="closeTab(event,this)">✕</span>
+      </div>
+      <div class="tab" data-pg="scores" onclick="clickTab(this)">
+        ⚽ Live Scores
+        <span class="tab-x" onclick="closeTab(event,this)">✕</span>
+      </div>
+      <div class="tab" data-pg="watch" onclick="clickTab(this)">
+        🎬 Highlights
+        <span class="tab-x" onclick="closeTab(event,this)">✕</span>
+      </div>
+      <div class="tab" data-pg="settings" onclick="clickTab(this)">
+        ⚙️ Settings
+        <span class="tab-x" onclick="closeTab(event,this)">✕</span>
+      </div>
+      <button id="newtab-btn" onclick="addTab()">+</button>
+    </div>
+
+    <!-- Navigation bar -->
+    <div id="navrow">
+      <button class="nb" onclick="goBack()" title="Back">&#8592;</button>
+      <button class="nb" onclick="goFwd()" title="Forward">&#8594;</button>
+      <button class="nb" id="rbtn" onclick="doRefresh()" title="Refresh">&#8635;</button>
+      <button class="nb" onclick="nav('home')" title="Home">&#8962;</button>
+      <div id="urlwrap">
+        <span id="lock">🔒</span>
+        <input id="urlbar" type="text" value="sportbrowser://newtab"
+          placeholder="Search or enter a URL..."
+          onkeydown="if(event.key==='Enter') nav(this.value)" />
+        <button id="go-btn" onclick="nav(document.getElementById('urlbar').value)">Go</button>
+      </div>
+      <button class="nb" title="Bookmark">☆</button>
+      <button class="nb" title="Downloads">⬇</button>
+    </div>
+
+    <!-- Bookmarks bar -->
+    <div id="bookmarks-bar">
+      <button class="bm" onclick="nav('scores')">⚽ Live Scores</button>
+      <button class="bm" onclick="nav('watch')">🎬 Highlights</button>
+      <button class="bm" onclick="nav('https://www.espn.com')">ESPN</button>
+      <button class="bm" onclick="nav('https://www.bbc.com/sport')">BBC Sport</button>
+      <button class="bm" onclick="nav('https://www.nba.com')">NBA.com</button>
+      <button class="bm" onclick="nav('https://www.fifa.com')">FIFA</button>
+      <button class="bm" onclick="nav('https://www.nfl.com')">NFL.com</button>
+      <button class="bm" onclick="nav('settings')">⚙️ Settings</button>
+    </div>
+
+  </div><!-- end #chrome -->
+
+  <!-- Page content -->
+  <div id="content">
+
+    <!-- HOME PAGE -->
+    <div class="page show" id="home-pg">
+      <div id="home-logo">Sport<span>Browser</span></div>
+      <div id="home-tagline">Your gateway to everything sports</div>
+      <div id="home-sbar">
+        <input id="hs" type="text" placeholder="Search sports, teams, players..."
+          onkeydown="if(event.key==='Enter') nav(this.value)" />
+        <button onclick="nav(document.getElementById('hs').value)">Search</button>
+      </div>
+      <div class="qgrid">
+        <div class="qcard" onclick="nav('scores')"><span class="qi">⚽</span><span class="ql">Live Scores</span></div>
+        <div class="qcard" onclick="nav('watch')"><span class="qi">🎬</span><span class="ql">Highlights</span></div>
+        <div class="qcard" onclick="nav('https://www.espn.com')"><span class="qi">🏆</span><span class="ql">ESPN</span></div>
+        <div class="qcard" onclick="nav('https://www.nba.com')"><span class="qi">🏀</span><span class="ql">NBA</span></div>
+        <div class="qcard" onclick="nav('https://www.fifa.com')"><span class="qi">🎽</span><span class="ql">FIFA</span></div>
+        <div class="qcard" onclick="nav('https://www.atptour.com')"><span class="qi">🎾</span><span class="ql">Tennis</span></div>
+        <div class="qcard" onclick="nav('https://www.nfl.com')"><span class="qi">🏈</span><span class="ql">NFL</span></div>
+        <div class="qcard" onclick="nav('settings')"><span class="qi">⚙️</span><span class="ql">Settings</span></div>
+      </div>
+      <div class="news-strip">
+        <div class="ns-item" onclick="nav('scores')">🔴 LIVE: Man City 2–1 Arsenal · 67'</div>
+        <div class="ns-item" onclick="nav('scores')">🔴 LIVE: Lakers 87–91 Celtics · Q3</div>
+        <div class="ns-item" onclick="nav('scores')">FT: Real Madrid 3–0 Valencia</div>
+      </div>
+    </div>
+
+    <!-- LIVE SCORES PAGE -->
+    <div class="page" id="scores-pg">
+      <div class="sp-top">
+        <span style="font-size:15px;font-weight:700;">Live Scores</span>
+        <div class="sport-tabs">
+          <span class="st on" onclick="filterSport(this)">All</span>
+          <span class="st" onclick="filterSport(this)">Soccer</span>
+          <span class="st" onclick="filterSport(this)">NBA</span>
+          <span class="st" onclick="filterSport(this)">NFL</span>
+          <span class="st" onclick="filterSport(this)">Tennis</span>
+        </div>
+      </div>
+      <div class="scores-grid">
+        <div class="sc">
+          <div class="sc-lge">Premier League</div>
+          <div class="live-tag"><span class="live-dot"></span>Live · 67'</div>
+          <div class="match-row">
+            <span class="team-n">Man City</span>
+            <div class="score-mid"><span>2</span><span class="sdash">–</span><span>1</span></div>
+            <span class="team-n r">Arsenal</span>
+          </div>
+        </div>
+        <div class="sc">
+          <div class="sc-lge">NBA Playoffs</div>
+          <div class="live-tag"><span class="live-dot"></span>Live · Q3 8:22</div>
+          <div class="match-row">
+            <span class="team-n">Lakers</span>
+            <div class="score-mid"><span>87</span><span class="sdash">–</span><span>91</span></div>
+            <span class="team-n r">Celtics</span>
+          </div>
+        </div>
+        <div class="sc">
+          <div class="sc-lge">Champions League</div>
+          <div class="live-tag"><span class="live-dot"></span>Live · 82'</div>
+          <div class="match-row">
+            <span class="team-n">PSG</span>
+            <div class="score-mid"><span>1</span><span class="sdash">–</span><span>1</span></div>
+            <span class="team-n r">Bayern</span>
+          </div>
+        </div>
+        <div class="sc">
+          <div class="sc-lge">La Liga</div>
+          <div style="font-size:10px;color:#aaa;margin-bottom:6px;">Full Time</div>
+          <div class="match-row">
+            <span class="team-n">Real Madrid</span>
+            <div class="score-mid"><span>3</span><span class="sdash">–</span><span>0</span></div>
+            <span class="team-n r">Valencia</span>
+          </div>
+        </div>
+        <div class="sc">
+          <div class="sc-lge">Serie A</div>
+          <div class="live-tag"><span class="live-dot"></span>Live · 45+2'</div>
+          <div class="match-row">
+            <span class="team-n">Inter Milan</span>
+            <div class="score-mid"><span>0</span><span class="sdash">–</span><span>0</span></div>
+            <span class="team-n r">AC Milan</span>
+          </div>
+        </div>
+        <div class="sc">
+          <div class="sc-lge">NHL</div>
+          <div style="font-size:10px;color:#aaa;margin-bottom:6px;">Full Time</div>
+          <div class="match-row">
+            <span class="team-n">Maple Leafs</span>
+            <div class="score-mid"><span>4</span><span class="sdash">–</span><span>2</span></div>
+            <span class="team-n r">Rangers</span>
+          </div>
+        </div>
+      </div>
+      <div class="sp-news-wrap">
+        <div class="sp-news-hd">Top Headlines</div>
+        <div class="ni"><h4>LeBron James breaks all-time scoring record in overtime win</h4><p>ESPN · 14 mins ago</p></div>
+        <div class="ni"><h4>Champions League semi-final draw: Bayern face Real Madrid</h4><p>UEFA.com · 1 hr ago</p></div>
+        <div class="ni"><h4>Djokovic withdraws from Roland Garros due to knee injury</h4><p>Tennis World · 2 hrs ago</p></div>
+        <div class="ni"><h4>NFL Draft: Top 10 picks and biggest surprises of round one</h4><p>NFL.com · 3 hrs ago</p></div>
+      </div>
+    </div>
+
+    <!-- HIGHLIGHTS PAGE -->
+    <div class="page" id="watch-pg">
+      <div class="watch-top">
+        <span>Highlights &amp; Replays</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.45);">Updated live</span>
+      </div>
+      <div class="cat-row">
+        <button class="cat-btn on" onclick="filterCat(this)">All</button>
+        <button class="cat-btn" onclick="filterCat(this)">Soccer</button>
+        <button class="cat-btn" onclick="filterCat(this)">Basketball</button>
+        <button class="cat-btn" onclick="filterCat(this)">Tennis</button>
+        <button class="cat-btn" onclick="filterCat(this)">American Football</button>
+        <button class="cat-btn" onclick="filterCat(this)">Hockey</button>
+      </div>
+      <div class="vid-grid">
+        <div class="vcard">
+          <div class="vthumb" style="background:#0f3460">⚽<div class="vplay">▶</div></div>
+          <div class="vinfo"><div class="vtitle">Man City vs Arsenal — All goals</div><div class="vmeta">Premier League · 2 min ago</div></div>
+        </div>
+        <div class="vcard">
+          <div class="vthumb" style="background:#17375e">🏀<div class="vplay">▶</div></div>
+          <div class="vinfo"><div class="vtitle">LeBron's record-breaking moment</div><div class="vmeta">NBA · 18 min ago</div></div>
+        </div>
+        <div class="vcard">
+          <div class="vthumb" style="background:#1a3a2a">🎾<div class="vplay">▶</div></div>
+          <div class="vinfo"><div class="vtitle">Alcaraz stunning backhand winners</div><div class="vmeta">Monte Carlo · 1 hr ago</div></div>
+        </div>
+        <div class="vcard">
+          <div class="vthumb" style="background:#2e1a0e">🏈<div class="vplay">▶</div></div>
+          <div class="vinfo"><div class="vtitle">NFL Draft top 5 picks reaction</div><div class="vmeta">NFL Network · 3 hrs ago</div></div>
+        </div>
+        <div class="vcard">
+          <div class="vthumb" style="background:#1b0f3a">🎽<div class="vplay">▶</div></div>
+          <div class="vinfo"><div class="vtitle">PSG vs Bayern — Best moments</div><div class="vmeta">UCL · 30 min ago</div></div>
+        </div>
+        <div class="vcard">
+          <div class="vthumb" style="background:#1e3a1e">🏒<div class="vplay">▶</div></div>
+          <div class="vinfo"><div class="vtitle">Maple Leafs shutout highlights</div><div class="vmeta">NHL · 4 hrs ago</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="settings-pg">
+      <div class="s-section">
+        <h3>Appearance</h3>
+        <div class="s-row">
+          <div><div class="s-label">Dark chrome theme</div></div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="s-row">
+          <div class="s-label">Default search engine</div>
+          <select class="ss"><option>Google</option><option>Bing</option><option>DuckDuckGo</option><option>Yahoo</option></select>
+        </div>
+        <div class="s-row">
+          <div><div class="s-label">Show bookmarks bar</div></div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="s-row">
+          <div><div class="s-label">Show live score ticker</div><div class="s-sub">Scores appear in the status bar</div></div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div class="s-section">
+        <h3>Sports Preferences</h3>
+        <div class="s-row">
+          <div class="s-label">Favorite sport</div>
+          <select class="ss"><option>Soccer</option><option>Basketball</option><option>Tennis</option><option>American Football</option><option>Hockey</option></select>
+        </div>
+        <div class="s-row">
+          <div class="s-label">Favorite team</div>
+          <select class="ss"><option>Man City</option><option>Arsenal</option><option>Real Madrid</option><option>Lakers</option><option>Celtics</option><option>Bayern Munich</option></select>
+        </div>
+        <div class="s-row">
+          <div><div class="s-label">Goal &amp; score notifications</div><div class="s-sub">Alerts for your favorite team</div></div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="s-row">
+          <div><div class="s-label">Auto-refresh scores</div><div class="s-sub">Every 30 seconds</div></div>
+          <div class="tog" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div class="s-section">
+        <h3>Privacy &amp; Security</h3>
+        <div class="s-row">
+          <div><div class="s-label">Block ads</div></div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="s-row">
+          <div><div class="s-label">Block trackers</div></div>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="s-row">
+          <div><div class="s-label">Clear history on exit</div></div>
+          <div class="tog" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="s-row">
+          <div class="s-label">Clear all browsing data</div>
+          <button class="s-btn" onclick="this.textContent='✓ Cleared!'">Clear now</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end #content -->
+
+  <div id="statusbar">
+    <span id="sbar-msg">Ready</span>
+    <span>SportBrowser v2.0 &nbsp;🔒&nbsp; Secure connection</span>
+  </div>
+</div><!-- end #wrap -->
+
+<script>
+const pageUrls = {
+  home: 'sportbrowser://newtab',
+  scores: 'sportbrowser://live-scores',
+  watch: 'sportbrowser://highlights',
+  settings: 'sportbrowser://settings'
+};
+const pageTitles = {
+  home: 'New Tab — SportBrowser',
+  scores: 'Live Scores — SportBrowser',
+  watch: 'Highlights — SportBrowser',
+  settings: 'Settings — SportBrowser'
+};
+let activeTab = document.querySelector('.tab.active');
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  const pg = document.getElementById(name + '-pg');
+  if (pg) pg.classList.add('show');
+  document.getElementById('urlbar').value = pageUrls[name] || ('https://' + name);
+  document.getElementById('titletext').textContent = pageTitles[name] || name;
+  setStatus('Loaded: ' + (pageUrls[name] || name));
+}
+
+function clickTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  activeTab = el;
+  showPage(el.dataset.pg);
+}
+
+function closeTab(e, xEl) {
+  e.stopPropagation();
+  const tab = xEl.closest('.tab');
+  const wasActive = tab.classList.contains('active');
+  tab.remove();
+  if (wasActive) {
+    const remaining = document.querySelectorAll('.tab');
+    if (remaining.length > 0) remaining[0].click();
+  }
+}
+
+let tc = 5;
+function addTab() {
+  const tabrow = document.getElementById('tabrow');
+  const btn = document.getElementById('newtab-btn');
+  const t = document.createElement('div');
+  t.className = 'tab';
+  t.dataset.pg = 'home';
+  t.innerHTML = '🏠 New Tab ' + (tc++) + ' <span class="tab-x" onclick="closeTab(event,this)">✕</span>';
+  t.onclick = function(e) { if (e.target.classList.contains('tab-x')) return; clickTab(this); };
+  tabrow.insertBefore(t, btn);
+  clickTab(t);
+}
+
+function nav(val) {
+  val = (val || '').trim();
+  if (!val) return;
+  const lv = val.toLowerCase();
+  if (lv === 'scores' || lv.includes('score') || lv.includes('live') || lv.includes('sport')) switchTo('scores');
+  else if (lv === 'watch' || lv.includes('highlight') || lv.includes('video') || lv.includes('watch')) switchTo('watch');
+  else if (lv === 'settings' || lv.includes('setting') || lv.includes('prefer')) switchTo('settings');
+  else if (lv === '' || lv.includes('newtab') || lv === 'home') switchTo('home');
+  else {
+    const url = val.startsWith('http') ? val : 'https://' + val;
+    document.getElementById('urlbar').value = url;
+    setStatus('Opening: ' + url + ' ...');
+    window.open(url, '_blank');
+  }
+}
+
+function switchTo(pg) {
+  if (activeTab) activeTab.dataset.pg = pg;
+  showPage(pg);
+}
+
+function goBack() { setStatus('Going back...'); }
+function goFwd() { setStatus('Going forward...'); }
+
+function doRefresh() {
+  const btn = document.getElementById('rbtn');
+  btn.style.transition = 'transform 0.45s';
+  btn.style.transform = 'rotate(360deg)';
+  setTimeout(() => { btn.style.transform = ''; }, 480);
+  setStatus('Page refreshed');
+}
+
+function setStatus(msg) {
+  document.getElementById('sbar-msg').textContent = msg;
+}
+
+function filterSport(el) {
+  document.querySelectorAll('.sport-tabs .st').forEach(s => s.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function filterCat(el) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+</script>
+</body>
+</html>
